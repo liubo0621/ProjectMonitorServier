@@ -172,6 +172,8 @@ public class Server implements Runnable{
 			if (key.startsWith("pk")) {
 				primaryKeyName = tools.camelToUnderline(key);
 				continue;
+			}else if(key.startsWith("for")){
+				continue;
 			}
 			Object value = json.get(key);
 			value = tools.formateSqlValue(value);
@@ -181,7 +183,7 @@ public class Server implements Runnable{
 		}
 		condition = condition.substring(0, condition.length() - 4);
 		sql = "select " + primaryKeyName + " from " + table + " where " + condition;
-		System.out.println(sql);
+//		System.out.println(sql);
 		
 		ResultSet result = crud.find(sql);
 	
@@ -219,7 +221,7 @@ public class Server implements Runnable{
 			
 			sql += key + "=" + value + ",";
 		}
-		sql = sql.substring(0, sql.length() - 1);
+		sql += "record_time = CURRENT_TIMESTAMP";
 		sql += " where " + primaryKeyName + "=" + getIdInDB(json, table);
 //		System.out.println(sql);
 		
@@ -257,7 +259,7 @@ public class Server implements Runnable{
 	private void searchCommand(){
 		while(true){
 			try {
-				String sql = "select command from command_msg where ser_ip='" + clientIP + "' and client_port=" + clientPort + " and status=" + Constance.CommandStatus.TODO;
+				String sql = "select command from command_msg where ser_ip='" + clientIP + "' and client_port=" + clientPort + " and status=" + Constance.CommandStatus.TODO + " ORDER BY record_time";
 				ResultSet resultSet = crud.find(sql);
 				while(resultSet.next()){
 					String command = resultSet.getString(1);
