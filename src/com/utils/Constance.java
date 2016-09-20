@@ -13,10 +13,10 @@ public class Constance {
 	public static final String START_PROCESS   = "PROcess:START";
 	
 	public static class CommandStatus{
-		public static final int TODO      = 1;
-		public static final int DOING     = 2;
-		public static final int DONE      = 3;
-		public static final int EXCEPTION = 4;
+		public static final int TODO      = 0x0000010;
+		public static final int DOING     = 0x0000011;
+		public static final int DONE      = 0x0000012;
+		public static final int EXCEPTION = 0x0000013;
 	}
 
 

@@ -9,21 +9,24 @@ import com.utils.Tools;
  * 2016Äê9ÔÂ18ÈÕ
  */
 public class Test {
-	public static String getPrettyNumber(double number) {  
-	    return number == 0 ? 0+"" :BigDecimal.valueOf(number)  
-	            .stripTrailingZeros().toPlainString();  
+	public void a(){
+		String str = "111";
+		b(str);
+		System.out.println(str);
+	}
+	
+	public void b(String str){
+		str = "2222";
 	}
 	
 	public static void main(String[] args) {
-		String sql = "C:/xxx";
-		sql = "'" + sql + "'";
-		System.out.println(sql);
-		
-//		Tools tools = Tools.getTools();
-//		String str = "\\xxx";
-//		str = tools.formateSqlValue(str);
-//		System.out.println(str);
-//		System.out.println(str.length());
+		new Test().a();
+		String str = "1232null";  
+		String str2 = "1232" + null;
+	    System.out.println("string = " + str);  
+	  System.out.println(str2);
+	  System.out.println(str2.equals(str));
+	  System.out.println(1/0);
 	}
 }
 

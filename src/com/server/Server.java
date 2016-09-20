@@ -41,6 +41,7 @@ public class Server implements Runnable{
 	private static final String TB_PROJECT_MSG = "project_msg";
 	private static final String TB_SERVER_MSG = "server_msg";
 	private static final String TB_THREAD_MSG = "thread_msg";
+	private static final String TB_EXCEPTION_MSG = "exception_msg";
 	
 	public static final String LISTEN_CLIENT = "0";
 	public static final String SEARCH_COMMAND = "1";
@@ -118,10 +119,17 @@ public class Server implements Runnable{
 		jsonBean.put("cliPort", clientPort);
 		addMsgToDB(jsonBean, TB_CLIENT_MSG, true);
 		
+		//可能为空 需要处理
 		jsonBean = json.getJSONObject("threadMsg");
 		jsonBean.put("forProId", projectId);
 		jsonBean.put("forSerId", serverId);	
 		addMsgToDB(jsonBean, TB_THREAD_MSG, true);
+		
+		//可能为空 需要处理
+		jsonBean = json.getJSONObject("execptionMsg");
+		jsonBean.put("forProId", projectId);
+		jsonBean.put("forSerId", serverId);	
+		addMsgToDB(jsonBean, TB_EXCEPTION_MSG);
 		
 		JSONArray jsonArray;
 		
