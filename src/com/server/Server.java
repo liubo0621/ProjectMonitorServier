@@ -1,14 +1,11 @@
 package com.server;
 
-import java.io.Console;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
-import javax.activation.CommandMap;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -33,6 +30,7 @@ public class Server implements Runnable{
 	
 	private int searchCommandTime;
 	private int clientPort;
+	private boolean isDoing = false;
 	private String clientIP;
 	
 	private static final String TB_CLIENT_MSG = "client_msg";
@@ -83,8 +81,17 @@ public class Server implements Runnable{
 				String msg = new String(buffer, 0, length);
 				System.out.println(length);
 				Log.out.debug("rec - " + msg);
-				
-				dealRecMsg(msg);
+
+				if (msg.startsWith("DONE:")) {
+					updateCommandStatus(Constance.CommandStatus.DONE);
+					if (msg.endsWith("SERver:RESTART")) {
+						closeSocket();
+						flag = false;
+					}
+				}else{
+					dealRecMsg(msg);
+				}
+
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -266,6 +273,9 @@ public class Server implements Runnable{
 	
 	private void searchCommand(){
 		while(true){
+			if (isDoing) {
+				continue;
+			}
 			try {
 				String sql = "select command from command_msg where ser_ip='" + clientIP + "' and client_port=" + clientPort + " and status=" + Constance.CommandStatus.TODO + " ORDER BY record_time";
 				ResultSet resultSet = crud.find(sql);
@@ -294,8 +304,32 @@ public class Server implements Runnable{
 	private void sendMsgToClient(String msg){
 		try {
 			os.write(msg.getBytes());
-			String sql = "update command_msg set status=" + Constance.CommandStatus.DOING + " where ser_ip='" + clientIP + "' and client_port=" + clientPort;
-			crud.update(sql);
+			updateCommandStatus(Constance.CommandStatus.DOING);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	private void updateCommandStatus(int status){
+		if (status == Constance.CommandStatus.DOING) {
+			isDoing = true;
+		}else{
+			isDoing  = false;
+		}
+		//¸ü¸ÄÃüÁî×´Ì¬Îªdoing
+		String sql = "update command_msg set status=" + status + " where ser_ip='" + clientIP + "' and client_port=" + clientPort;
+		crud.update(sql);
+	}
+	
+	private void closeSocket(){
+		try {
+			is.close();
+			os.close();
+			socket.close();
+			is = null;
+			os =  null;
+			socket = null;
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
