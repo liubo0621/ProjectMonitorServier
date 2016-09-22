@@ -62,7 +62,7 @@ public class Server implements Runnable{
 //		CommandMsg command = new CommandMsg();
 //		command.setClientPort(clientPort);
 //		command.setSerIp(clientIP);
-//		command.setCommand("PROcess:START");
+//		command.setCommand("PROcess:RESTART");
 //		command.setStatus(Constance.CommandStatus.TODO);
 //		//test
 //		JSONObject json = JSONObject.fromObject(command);
@@ -87,6 +87,9 @@ public class Server implements Runnable{
 					if (msg.endsWith("SERver:RESTART")) {
 						closeSocket();
 						flag = false;
+						addServerStopStatusToDB();
+					}else if(msg.endsWith("PROcess:RESTART")){
+						addProjectStopStatusToDB();
 					}
 				}else{
 					dealRecMsg(msg);
@@ -102,11 +105,6 @@ public class Server implements Runnable{
 	private void dealRecMsg(String msg){
         JSONObject json = JSONObject.fromObject(msg);
 		
-//        JSONObject jsonBean = json.getJSONObject("clientMsg");
-//        Object logpath = jsonBean.get("cliLogPath");
-//        System.out.println(logpath);
-//        System.out.println(tools.formateSqlValue(logpath));
-//        
         JSONObject jsonBean = null;
         int serverId;
 		int projectId;
@@ -128,15 +126,20 @@ public class Server implements Runnable{
 		
 		//可能为空 需要处理
 		jsonBean = json.getJSONObject("threadMsg");
-		jsonBean.put("forProId", projectId);
-		jsonBean.put("forSerId", serverId);	
-		addMsgToDB(jsonBean, TB_THREAD_MSG, true);
+		if (jsonBean.getInt("thrTaskId") != 0) {
+			jsonBean.put("forProId", projectId);
+			jsonBean.put("forSerId", serverId);	
+			addMsgToDB(jsonBean, TB_THREAD_MSG, true);
+		}
+		
 		
 		//可能为空 需要处理
 		jsonBean = json.getJSONObject("execptionMsg");
-		jsonBean.put("forProId", projectId);
-		jsonBean.put("forSerId", serverId);	
-		addMsgToDB(jsonBean, TB_EXCEPTION_MSG);
+		if (!jsonBean.getString("excMsg").equals("null")) {
+			jsonBean.put("forProId", projectId);
+			jsonBean.put("forSerId", serverId);	
+			addMsgToDB(jsonBean, TB_EXCEPTION_MSG);
+		}
 		
 		JSONArray jsonArray;
 		
@@ -320,6 +323,33 @@ public class Server implements Runnable{
 		//更改命令状态为doing
 		String sql = "update command_msg set status=" + status + " where ser_ip='" + clientIP + "' and client_port=" + clientPort;
 		crud.update(sql);
+	}
+	
+//	insert into server_msg (ser_ip,ser_mac,ser_system,ser_memory,ser_swap,ser_memory_used,ser_memory_free,ser_swap_used,ser_swap_free,ser_status) 
+//	select ser_ip,ser_mac,ser_system,ser_memory,ser_swap,0,0,0,0, 110
+//	from server_msg
+//	where ser_ip = '192.168.1.109' order by pk_ser_id DESC limit 0,1;
+	//当客户端收到重启服务器的命令时  更新服务器的状态为关闭
+	private void addServerStopStatusToDB(){
+		String sql = "insert into server_msg (ser_ip,ser_mac,ser_system,ser_memory,ser_swap,ser_memory_used,ser_memory_free,ser_swap_used,ser_swap_free,ser_status) " +
+						"select ser_ip,ser_mac,ser_system,ser_memory,ser_swap,0,0,0,0," + Constance.ServerStatus.STOP + " " +
+							"from server_msg " +
+							"where ser_ip = '" + clientIP +  "' order by pk_ser_id DESC limit 0,1";
+		crud.instert(sql);
+	}
+	
+//	insert into project_msg (pro_name, pro_task_done_num,for_ser_id, pro_thread_num, pro_cpu_rate, pro_memory, pro_run_time, pro_status)
+//	select pro_name, pro_task_done_num, for_ser_id, 0, 0, 0, 'P0Y0M0DT0H0M0S 0', 20 from project_msg 
+//	where for_ser_id in (select pk_ser_id from server_msg where ser_ip = '192.168.1.109')
+//	order by pk_pro_id DESC LIMIT 0,1;
+	//当客户端收到重启用用程序的命令时  更新应用程序的状态为关闭
+	private void addProjectStopStatusToDB(){
+		String sql = "insert into project_msg (pro_name, pro_task_done_num,for_ser_id, pro_thread_num, pro_cpu_rate, pro_memory, pro_run_time, pro_status)"+
+						"select pro_name, pro_task_done_num, for_ser_id, 0, 0, 0, 'P0Y0M0DT0H0M0S 0', "+ Constance.ProjectStatus.STOP + " "+
+							"from project_msg " +
+							"where for_ser_id in (select pk_ser_id from server_msg where ser_ip = '" + clientIP +  "')"+
+							"order by pk_pro_id DESC LIMIT 0,1";
+		crud.instert(sql);
 	}
 	
 	private void closeSocket(){

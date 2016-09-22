@@ -18,6 +18,16 @@ public class Constance {
 		public static final int DONE      = 0x0000012;
 		public static final int EXCEPTION = 0x0000013;
 	}
+	
+	public static final class ProjectStatus{
+		public static final int RUNNING = 0x0000100;
+		public static final int STOP = 0x0000101;
+	}
+	
+	public static final class ServerStatus{
+		public static final int RUNNING = 0x0001000;
+		public static final int STOP = 0x0001001;
+	}
 
 
 }
