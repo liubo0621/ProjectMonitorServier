@@ -11,7 +11,6 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import com.db.operation.CRUD;
-import com.pojo.CommandMsg;
 import com.utils.Constance;
 import com.utils.Log;
 import com.utils.Tools;
@@ -60,15 +59,15 @@ public class Server implements Runnable{
 			e.printStackTrace();
 		}
 		
-		CommandMsg command = new CommandMsg();
-		command.setClientPort(clientPort);
-		command.setSerIp(clientIP);
-		command.setCommand("PROcess:START");
-		command.setStatus(Constance.CommandStatus.TODO);
-		//test
-		JSONObject json = JSONObject.fromObject(command);
-		System.out.println(json);
-		addMsgToDB(json, "command_msg", true);
+//		CommandMsg command = new CommandMsg();
+//		command.setClientPort(clientPort);
+//		command.setSerIp(clientIP);
+//		command.setCommand("PROcess:START");
+//		command.setStatus(Constance.CommandStatus.TODO);
+//		//test
+//		JSONObject json = JSONObject.fromObject(command);
+//		System.out.println(json);
+//		addMsgToDB(json, "command_msg", true);
 		
 	}
 	
@@ -83,7 +82,8 @@ public class Server implements Runnable{
 				Log.out.debug("rec - " + msg);
 
 				if (msg.startsWith("DONE:")) {
-					updateCommandStatus(Constance.CommandStatus.DONE);
+					String command = msg.substring(5);
+					updateCommandStatus(command, Constance.CommandStatus.DONE);
 					if (msg.endsWith("SERver:RESTART")) {
 						closeSocket();
 						flag = false;
@@ -282,7 +282,7 @@ public class Server implements Runnable{
 				while(resultSet.next()){
 					String command = resultSet.getString(1);
 					Log.out.debug("send - " + command);
-					sendMsgToClient(command);
+					sendCommandToClient(command);
 					break;
 				}
 				resultSet.close();
@@ -301,17 +301,17 @@ public class Server implements Runnable{
 		
 	}
 	
-	private void sendMsgToClient(String msg){
+	private void sendCommandToClient(String command){
 		try {
-			os.write(msg.getBytes());
-			updateCommandStatus(Constance.CommandStatus.DOING);
+			os.write(command.getBytes());
+			updateCommandStatus(command, Constance.CommandStatus.DOING);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 	
-	private void updateCommandStatus(int status){
+	private void updateCommandStatus(String command, int status){
 		if (status == Constance.CommandStatus.DOING) {
 			isDoing = true;
 		}else{
