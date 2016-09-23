@@ -30,6 +30,7 @@ public class Server implements Runnable{
 	private int searchCommandTime;
 	private int clientPort;
 	private boolean isDoing = false;
+	private boolean flag = true;
 	private String clientIP;
 	
 	private static final String TB_CLIENT_MSG = "client_msg";
@@ -72,7 +73,6 @@ public class Server implements Runnable{
 	}
 	
 	private void listenerClient(){
-		boolean flag = true;
 		while(flag){
 			byte[] buffer = new byte[4096];
 			try {
@@ -86,7 +86,6 @@ public class Server implements Runnable{
 					updateCommandStatus(command, Constance.CommandStatus.DONE);
 					if (msg.endsWith("SERver:RESTART")) {
 						closeSocket();
-						flag = false;
 						addServerStopStatusToDB();
 					}else if(msg.endsWith("PROcess:RESTART")){
 						addProjectStopStatusToDB();
@@ -275,7 +274,7 @@ public class Server implements Runnable{
 	}
 	
 	private void searchCommand(){
-		while(true){
+		while(flag){
 			if (isDoing) {
 				continue;
 			}
@@ -360,6 +359,7 @@ public class Server implements Runnable{
 			is = null;
 			os =  null;
 			socket = null;
+			flag = false;
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
