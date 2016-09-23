@@ -73,27 +73,38 @@ public class Server implements Runnable{
 	}
 	
 	private void listenerClient(){
+		String msg = "";
 		while(flag){
 			byte[] buffer = new byte[4096];
 			try {
 				int length =  is.read(buffer);
-				String msg = new String(buffer, 0, length);
-				System.out.println(length);
-				Log.out.debug("rec - " + msg);
+				msg += new String(buffer, 0, length);
+				
+				//拆分数据包 防止粘包现象
+				String[] msgs = msg.split("<msg=");
+				for (int i = 0; i < msgs.length; i++) {
+					if (msgs[i].endsWith("/>")) {
+						String content = msgs[i].substring(0, msgs[i].indexOf("/>"));
+						//do content
+						Log.out.debug("rec - " + content);
 
-				if (msg.startsWith("DONE:")) {
-					String command = msg.substring(5);
-					updateCommandStatus(command, Constance.CommandStatus.DONE);
-					if (msg.endsWith("SERver:RESTART")) {
-						closeSocket();
-						addServerStopStatusToDB();
-					}else if(msg.endsWith("PROcess:RESTART")){
-						addProjectStopStatusToDB();
+						if (content.startsWith("DONE:")) {
+							String command = content.substring(5);
+							updateCommandStatus(command, Constance.CommandStatus.DONE);
+							if (content.endsWith("SERver:RESTART")) {
+								closeSocket();
+								addServerStopStatusToDB();
+							}else if(content.endsWith("PROcess:RESTART")){
+								addProjectStopStatusToDB();
+							}
+						}else{
+							dealRecMsg(content);
+						}
+						//end
+					}else{
+						msg = msgs[i];
 					}
-				}else{
-					dealRecMsg(msg);
 				}
-
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
