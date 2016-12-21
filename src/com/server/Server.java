@@ -117,22 +117,24 @@ public class Server implements Runnable{
 		
         JSONObject jsonBean = null;
         int serverId;
+		int clientId;
 		int projectId;
 		
 		jsonBean = json.getJSONObject("serverMsg");
 		addMsgToDB(jsonBean, TB_SERVER_MSG);
 		serverId = getIdInDB(jsonBean, TB_SERVER_MSG);
 		
-		jsonBean = json.getJSONObject("projectMsg");
-		jsonBean.put("forSerId", serverId);
-		addMsgToDB(jsonBean, TB_PROJECT_MSG);
-		projectId = getIdInDB(jsonBean, TB_PROJECT_MSG);
-		
 		jsonBean = json.getJSONObject("clientMsg");
-		jsonBean.put("forProId", projectId);
 		jsonBean.put("forSerId", serverId);	
 		jsonBean.put("cliPort", clientPort);
 		addMsgToDB(jsonBean, TB_CLIENT_MSG, true);
+		clientId = getIdInDB(jsonBean, TB_CLIENT_MSG);
+		
+		jsonBean = json.getJSONObject("projectMsg");
+		jsonBean.put("forSerId", serverId);
+		jsonBean.put("forCliId", clientId);
+		addMsgToDB(jsonBean, TB_PROJECT_MSG);
+		projectId = getIdInDB(jsonBean, TB_PROJECT_MSG);
 		
 		//可能为空 需要处理
 		jsonBean = json.getJSONObject("threadMsg");
